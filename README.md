@@ -1,2 +1,2 @@
-# Tiny Systems Example module
+# Tiny Systems Encoding module
 Encoding-decoding components.
