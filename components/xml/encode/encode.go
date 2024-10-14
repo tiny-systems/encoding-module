@@ -45,7 +45,7 @@ func (h *Component) GetInfo() module.ComponentInfo {
 	return module.ComponentInfo{
 		Name:        ComponentName,
 		Description: "XML Encoder",
-		Info:        "Encodes input document with XML encoded data",
+		Info:        "Encodes input document with XML",
 		Tags:        []string{"xml"},
 	}
 }
