@@ -3,6 +3,7 @@ package encode
 import (
 	"context"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/goccy/go-json"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/swaggest/jsonschema-go"
@@ -58,10 +59,10 @@ func (r *SigningMethod) JSONSchema() (jsonschema.Schema, error) {
 }
 
 type Request struct {
-	Context       Context          `json:"context" configurable:"true" title:"Context" description:"Arbitrary message to be send alongside with encoded message"`
-	SigningMethod SigningMethod    `json:"signingMethod" required:"true" title:"Signing Method" description:""`
-	Claims        RegisteredClaims `json:"claims" configurable:"true" required:"true" title:"Claims" description:""`
-	Key           string           `json:"key" required:"true" format:"textarea" title:"Private Key" description:"Plain text or PEM formatted private key"`
+	Context       Context       `json:"context" configurable:"true" title:"Context" description:"Arbitrary message to be send alongside with encoded message"`
+	SigningMethod SigningMethod `json:"signingMethod" required:"true" title:"Signing Method" description:""`
+	Claims        MapClaims     `json:"claims" configurable:"true" required:"true" title:"Claims" description:""`
+	Key           string        `json:"key" required:"true" format:"textarea" title:"Private Key" description:"Plain text or PEM formatted private key"`
 }
 
 type Response struct {
@@ -94,6 +95,8 @@ func (h *Component) Handle(ctx context.Context, handler module.Handler, port str
 		h.settings = in
 
 	case RequestPort:
+
+		spew.Dump(msg)
 
 		in, ok := msg.(Request)
 		if !ok {
