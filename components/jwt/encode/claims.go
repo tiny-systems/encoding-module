@@ -146,8 +146,7 @@ func (m MapClaims) JSONSchema() (jsonschema.Schema, error) {
 	name.WithProperties(map[string]jsonschema.SchemaOrBool{
 		"sub": (&jsonschema.Schema{}).WithTitle("Subject").WithType(jsonschema.String.Type()).ToSchemaOrBool(),
 		"iss": (&jsonschema.Schema{}).WithTitle("Issuer").WithType(jsonschema.String.Type()).ToSchemaOrBool(),
-		"aud": (&jsonschema.Schema{}).WithTitle("Audience").WithType(jsonschema.Array.Type()).WithItems(*(&jsonschema.Items{}).
-			WithSchemaArray((&jsonschema.Schema{}).WithType(jsonschema.String.Type()).ToSchemaOrBool())).ToSchemaOrBool(),
+		"aud": (&jsonschema.Schema{}).WithTitle("Audience").WithType(jsonschema.Array.Type()).WithItems(*(&jsonschema.Items{}).WithSchemaOrBool((&jsonschema.Schema{}).WithType(jsonschema.String.Type()).ToSchemaOrBool())).ToSchemaOrBool(),
 		"exp": (&jsonschema.Schema{}).WithTitle("ExpiresAt").WithType(jsonschema.Integer.Type()).WithDescription("Expiration time").ToSchemaOrBool(),
 		"nbf": (&jsonschema.Schema{}).WithTitle("NotBefore").WithType(jsonschema.Integer.Type()).ToSchemaOrBool(),
 		"iat": (&jsonschema.Schema{}).WithTitle("IssuedAt").WithType(jsonschema.Integer.Type()).ToSchemaOrBool(),
