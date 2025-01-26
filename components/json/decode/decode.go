@@ -17,8 +17,11 @@ const (
 
 type Context any
 
+type Decoded any
+
 type Settings struct {
-	EnableErrorPort bool `json:"enableErrorPort" required:"true" title:"Enable Error Port" description:"If error happen, error port will emit an error message"`
+	EnableErrorPort bool    `json:"enableErrorPort" required:"true" title:"Enable Error Port" description:"If error happen, error port will emit an error message"`
+	Decoded         Decoded `json:"decoded" configurable:"true" title:"Decoded Document Example" description:"Define document schema. Optional."`
 }
 
 type Error struct {
@@ -30,8 +33,6 @@ type Request struct {
 	Context Context `json:"context,omitempty" configurable:"true" title:"Context" description:"Arbitrary message to be send alongside with decoded message"`
 	Encoded string  `json:"encoded" required:"true" title:"Input string" format:"textarea" description:"JSON encoded string"`
 }
-
-type Decoded any
 
 type Output struct {
 	Context Context `json:"context"`
