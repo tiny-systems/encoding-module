@@ -124,7 +124,7 @@ func (h *Component) GetInfo() module.ComponentInfo {
 	return module.ComponentInfo{
 		Name:        ComponentName,
 		Description: "Go Template Engine",
-		Info:        "Renders templates using go's html/template standard package. Supports layouts and partials.",
+		Info:        "Render templates using html/template standard package. Supports layouts and partials.",
 		Tags:        []string{"html", "template", "engine"},
 	}
 }
