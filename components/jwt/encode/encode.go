@@ -3,7 +3,6 @@ package encode
 import (
 	"context"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/goccy/go-json"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/swaggest/jsonschema-go"
@@ -95,8 +94,6 @@ func (h *Component) Handle(ctx context.Context, handler module.Handler, port str
 		h.settings = in
 
 	case RequestPort:
-
-		spew.Dump(msg)
 
 		in, ok := msg.(Request)
 		if !ok {
