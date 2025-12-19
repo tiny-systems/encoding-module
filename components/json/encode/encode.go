@@ -98,19 +98,18 @@ func (h *Component) Ports() []module.Port {
 			Name:          RequestPort,
 			Label:         "In",
 			Position:      module.Left,
-			Source:        true,
 			Configuration: Request{},
 		},
 		{
 			Name:          ResponsePort,
 			Position:      module.Right,
 			Label:         "Out",
+			Source:        true,
 			Configuration: Response{},
 		},
 		{
 			Name:          module.SettingsPort,
 			Label:         "Settings",
-			Source:        true,
 			Configuration: h.settings,
 		},
 	}
@@ -121,7 +120,7 @@ func (h *Component) Ports() []module.Port {
 		Position:      module.Bottom,
 		Name:          ErrorPort,
 		Label:         "Error",
-		Source:        false,
+		Source:        true,
 		Configuration: Error{},
 	})
 }
