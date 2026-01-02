@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/goccy/go-json"
+	"github.com/tiny-systems/module/api/v1alpha1"
 	"github.com/tiny-systems/module/module"
 	"github.com/tiny-systems/module/registry"
 )
@@ -52,10 +53,10 @@ func (h *Component) GetInfo() module.ComponentInfo {
 	}
 }
 
-func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg interface{}) error {
+func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg interface{}) any {
 
 	switch port {
-	case module.SettingsPort:
+	case v1alpha1.SettingsPort:
 
 		in, ok := msg.(Settings)
 		if !ok {
@@ -110,7 +111,7 @@ func (h *Component) Ports() []module.Port {
 			Configuration: Output{},
 		},
 		{
-			Name:          module.SettingsPort,
+			Name:          v1alpha1.SettingsPort,
 			Label:         "Settings",
 			Configuration: h.settings,
 		},

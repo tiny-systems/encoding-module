@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/tiny-systems/module/api/v1alpha1"
 	"github.com/tiny-systems/module/module"
 	"github.com/tiny-systems/module/registry"
 	"html/template"
@@ -129,10 +130,10 @@ func (h *Component) GetInfo() module.ComponentInfo {
 	}
 }
 
-func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg interface{}) error {
+func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg interface{}) any {
 
 	switch port {
-	case module.SettingsPort:
+	case v1alpha1.SettingsPort:
 		// compile template
 		in, ok := msg.(Settings)
 		if !ok {
@@ -226,7 +227,7 @@ func (h *Component) Ports() []module.Port {
 			Configuration: Response{},
 		},
 		{
-			Name:          module.SettingsPort,
+			Name:          v1alpha1.SettingsPort,
 			Label:         "Settings",
 			Configuration: h.settings,
 		},
