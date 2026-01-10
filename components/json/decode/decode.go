@@ -3,6 +3,7 @@ package decode
 import (
 	"context"
 	"fmt"
+
 	"github.com/goccy/go-json"
 	"github.com/tiny-systems/module/api/v1alpha1"
 	"github.com/tiny-systems/module/module"
