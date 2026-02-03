@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"html/template"
+	"time"
+
+	"github.com/goccy/go-json"
+	"github.com/swaggest/jsonschema-go"
 	"github.com/tiny-systems/module/api/v1alpha1"
 	"github.com/tiny-systems/module/module"
 	"github.com/tiny-systems/module/registry"
-	"html/template"
-	"time"
 )
 
 const (
@@ -20,6 +23,36 @@ const (
 
 type Context any
 type RenderData any
+
+// TemplateName special type which can carry its value and possible options for enum values
+type TemplateName struct {
+	Value   string
+	Options []string
+}
+
+// MarshalJSON treat like underlying Value string
+func (t *TemplateName) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.Value)
+}
+
+// UnmarshalJSON treat like underlying Value string
+func (t *TemplateName) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &t.Value)
+}
+
+func (t *TemplateName) JSONSchema() (jsonschema.Schema, error) {
+	name := jsonschema.Schema{}
+	name.AddType(jsonschema.String)
+	name.WithTitle("Template")
+	name.WithDescription("Select a template name. Add new templates via settings.")
+	name.WithDefault(t.Value)
+	enums := make([]interface{}, len(t.Options))
+	for k, v := range t.Options {
+		enums[k] = v
+	}
+	name.WithEnum(enums...)
+	return name, nil
+}
 
 type Template struct {
 	Name    string `json:"name" required:"true" title:"File name" Description:"e.g. footer.tmpl"`
@@ -39,9 +72,9 @@ type Error struct {
 }
 
 type Request struct {
-	Context    Context    `json:"context,omitempty" configurable:"true" title:"Context" description:"Arbitrary message to be send alongside with rendered content"`
-	RenderData RenderData `json:"renderData,omitempty" configurable:"true" title:"Render data" description:"Data being used to render the template"`
-	Template   string     `json:"template" required:"true" title:"Template" description:"Template to render"`
+	Context    Context      `json:"context,omitempty" configurable:"true" title:"Context" description:"Arbitrary message to be send alongside with rendered content"`
+	RenderData RenderData   `json:"renderData,omitempty" configurable:"true" title:"Render data" description:"Data being used to render the template"`
+	Template   TemplateName `json:"template" required:"true" title:"Template"`
 }
 
 type Response struct {
@@ -177,7 +210,7 @@ func (h *Component) Handle(ctx context.Context, handler module.Handler, port str
 		}
 
 		buf := &bytes.Buffer{}
-		t, ok := h.templateSet[in.Template]
+		t, ok := h.templateSet[in.Template.Value]
 		if !ok {
 			err := fmt.Errorf("template not found")
 			if !h.settings.EnableErrorPort {
@@ -189,7 +222,7 @@ func (h *Component) Handle(ctx context.Context, handler module.Handler, port str
 			})
 		}
 
-		err := t.ExecuteTemplate(buf, in.Template, in.RenderData)
+		err := t.ExecuteTemplate(buf, in.Template.Value, in.RenderData)
 		if err != nil {
 			if !h.settings.EnableErrorPort {
 				return err
@@ -212,12 +245,25 @@ func (h *Component) Handle(ctx context.Context, handler module.Handler, port str
 }
 
 func (h *Component) Ports() []module.Port {
+	// Build template name options from settings
+	templateOptions := make([]string, len(h.settings.Templates))
+	for i, t := range h.settings.Templates {
+		templateOptions[i] = t.Name
+	}
+
+	defaultTemplate := ""
+	if len(templateOptions) > 0 {
+		defaultTemplate = templateOptions[0]
+	}
+
 	ports := []module.Port{
 		{
 			Name:          RequestPort,
 			Label:         "Request",
 			Position:      module.Left,
-			Configuration: Request{},
+			Configuration: Request{
+				Template: TemplateName{Value: defaultTemplate, Options: templateOptions},
+			},
 		},
 		{
 			Name:          ResponsePort,
@@ -251,6 +297,7 @@ func (h *Component) Instance() module.Component {
 }
 
 var _ module.Component = (*Component)(nil)
+var _ jsonschema.Exposer = (*TemplateName)(nil)
 
 func init() {
 	registry.Register(&Component{})
