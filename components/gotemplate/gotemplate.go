@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"html/template"
+	"text/template"
 	"time"
 
 	"github.com/goccy/go-json"
@@ -158,7 +158,7 @@ func (h *Component) GetInfo() module.ComponentInfo {
 	return module.ComponentInfo{
 		Name:        ComponentName,
 		Description: "Go Template Engine",
-		Info:        "Render templates using html/template standard package. Supports layouts and partials.",
+		Info:        "Render templates using text/template standard package. Supports layouts and partials. Output is not HTML-escaped, suitable for JSON, plain text, and other formats.",
 		Tags:        []string{"html", "template", "engine"},
 	}
 }
@@ -178,7 +178,7 @@ func (h *Component) Handle(ctx context.Context, handler module.Handler, port str
 
 		funcMap := template.FuncMap{
 			"now": time.Now,
-			"builtWith": func() template.HTML {
+			"builtWith": func() string {
 				return `<a href="https://tinysystems.io?from=builtwith" target="_blank">Built with Tiny Systems</a>`
 			},
 		}
