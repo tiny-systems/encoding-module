@@ -10,6 +10,7 @@ import (
 	_ "github.com/tiny-systems/example-module/components/json/decode"
 	_ "github.com/tiny-systems/example-module/components/json/encode"
 	_ "github.com/tiny-systems/example-module/components/jwt/encode"
+	_ "github.com/tiny-systems/example-module/components/jwt/verify"
 	_ "github.com/tiny-systems/example-module/components/xml/encode"
 	"github.com/tiny-systems/module/cli"
 	"os"
