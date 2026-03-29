@@ -22,8 +22,7 @@ type Context any
 type Decoded any
 
 type Settings struct {
-	EnableErrorPort bool    `json:"enableErrorPort" required:"true" title:"Enable Error Port" description:"If error happen, error port will emit an error message"`
-	Decoded         Decoded `json:"decoded" configurable:"true" title:"Decoded Document Example" description:"Define document schema. Optional."`
+	EnableErrorPort bool `json:"enableErrorPort" required:"true" title:"Enable Error Port" description:"If error happen, error port will emit an error message"`
 }
 
 type Error struct {
