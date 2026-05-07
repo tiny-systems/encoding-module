@@ -163,85 +163,87 @@ func (h *Component) GetInfo() module.ComponentInfo {
 	}
 }
 
-func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg interface{}) any {
+// OnSettings stores the component settings.
+func (h *Component) OnSettings(_ context.Context, msg any) error {
 
-	switch port {
-	case v1alpha1.SettingsPort:
-		// compile template
-		in, ok := msg.(Settings)
-		if !ok {
-			return fmt.Errorf("invalid settings")
-		}
-
-		h.settings = in
-		ts := map[string]*template.Template{}
-
-		funcMap := template.FuncMap{
-			"now": time.Now,
-			"builtWith": func() string {
-				return `<a href="https://tinysystems.io?from=builtwith" target="_blank">Built with Tiny Systems</a>`
-			},
-		}
-
-		for _, t := range in.Templates {
-			tmpl, err := template.New(t.Name).Funcs(funcMap).Parse(t.Content)
-			if err != nil {
-				return err
-			}
-			for _, p := range in.Partials {
-				_, err = tmpl.New(p.Name).Parse(p.Content)
-				if err != nil {
-
-					return err
-				}
-			}
-			ts[t.Name] = tmpl
-		}
-
-		h.templateSet = ts
-	case RequestPort:
-
-		in, ok := msg.(Request)
-		if !ok {
-			return fmt.Errorf("invalid input")
-		}
-		if h.templateSet == nil {
-			return fmt.Errorf("template set not loaded")
-		}
-
-		buf := &bytes.Buffer{}
-		t, ok := h.templateSet[in.Template.Value]
-		if !ok {
-			err := fmt.Errorf("template not found")
-			if !h.settings.EnableErrorPort {
-				return err
-			}
-			return handler(ctx, ErrorPort, Error{
-				Context: in.Context,
-				Error:   err.Error(),
-			})
-		}
-
-		err := t.ExecuteTemplate(buf, in.Template.Value, in.RenderData)
-		if err != nil {
-			if !h.settings.EnableErrorPort {
-				return err
-			}
-			return handler(ctx, ErrorPort, Error{
-				Context: in.Context,
-				Error:   err.Error(),
-			})
-		}
-
-		return handler(ctx, ResponsePort, Response{
-			Context: in.Context,
-			Content: buf.String(),
-		})
-
-	default:
-		return fmt.Errorf("port %s is not supoprted", port)
+	// compile template
+	in, ok := msg.(Settings)
+	if !ok {
+		return fmt.Errorf("invalid settings")
 	}
+
+	h.settings = in
+	ts := map[string]*template.Template{}
+
+	funcMap := template.FuncMap{
+		"now": time.Now,
+		"builtWith": func() string {
+			return `<a href="https://tinysystems.io?from=builtwith" target="_blank">Built with Tiny Systems</a>`
+		},
+	}
+
+	for _, t := range in.Templates {
+		tmpl, err := template.New(t.Name).Funcs(funcMap).Parse(t.Content)
+		if err != nil {
+			return err
+		}
+		for _, p := range in.Partials {
+			_, err = tmpl.New(p.Name).Parse(p.Content)
+			if err != nil {
+
+				return err
+			}
+		}
+		ts[t.Name] = tmpl
+	}
+
+	h.templateSet = ts
 	return nil
+}
+
+// Handle dispatches the RequestPort. System ports go through capabilities.
+func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg any) any {
+	if port != RequestPort {
+		return fmt.Errorf("unknown port: %s", port)
+	}
+
+
+	in, ok := msg.(Request)
+	if !ok {
+		return fmt.Errorf("invalid input")
+	}
+	if h.templateSet == nil {
+		return fmt.Errorf("template set not loaded")
+	}
+
+	buf := &bytes.Buffer{}
+	t, ok := h.templateSet[in.Template.Value]
+	if !ok {
+		err := fmt.Errorf("template not found")
+		if !h.settings.EnableErrorPort {
+			return err
+		}
+		return handler(ctx, ErrorPort, Error{
+			Context: in.Context,
+			Error:   err.Error(),
+		})
+	}
+
+	err := t.ExecuteTemplate(buf, in.Template.Value, in.RenderData)
+	if err != nil {
+		if !h.settings.EnableErrorPort {
+			return err
+		}
+		return handler(ctx, ErrorPort, Error{
+			Context: in.Context,
+			Error:   err.Error(),
+		})
+	}
+
+	return handler(ctx, ResponsePort, Response{
+		Context: in.Context,
+		Content: buf.String(),
+	})
 }
 
 func (h *Component) Ports() []module.Port {
@@ -296,7 +298,10 @@ func (h *Component) Instance() module.Component {
 	}
 }
 
-var _ module.Component = (*Component)(nil)
+var (
+	_ module.Component       = (*Component)(nil)
+	_ module.SettingsHandler = (*Component)(nil)
+)
 var _ jsonschema.Exposer = (*TemplateName)(nil)
 
 func init() {

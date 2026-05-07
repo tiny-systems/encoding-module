@@ -83,81 +83,83 @@ func (h *Component) GetInfo() module.ComponentInfo {
 	}
 }
 
-func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg interface{}) any {
+// OnSettings stores the component settings.
+func (h *Component) OnSettings(_ context.Context, msg any) error {
 
-	switch port {
-	case v1alpha1.SettingsPort:
 
-		in, ok := msg.(Settings)
-		if !ok {
-			return fmt.Errorf("invalid settings")
-		}
-		h.settings = in
-
-	case RequestPort:
-
-		in, ok := msg.(Request)
-		if !ok {
-			return fmt.Errorf("invalid input")
-		}
-
-		var (
-			key    interface{}
-			method jwt.SigningMethod = jwt.SigningMethodHS256
-			err    error
-		)
-
-		switch in.SigningMethod.Value {
-		case "ES256":
-			method = jwt.SigningMethodES256
-			key, err = jwt.ParseECPrivateKeyFromPEM([]byte(in.Key))
-		case "ES384":
-			method = jwt.SigningMethodES384
-			key, err = jwt.ParseECPrivateKeyFromPEM([]byte(in.Key))
-		case "ES512":
-			method = jwt.SigningMethodES512
-			key, err = jwt.ParseECPrivateKeyFromPEM([]byte(in.Key))
-		case "HS256":
-			method = jwt.SigningMethodHS256
-			key = []byte(in.Key)
-		case "HS384":
-			method = jwt.SigningMethodHS384
-			key = []byte(in.Key)
-		case "HS512":
-			method = jwt.SigningMethodHS512
-			key = []byte(in.Key)
-		case "RS256":
-			method = jwt.SigningMethodRS256
-			key, err = jwt.ParseRSAPrivateKeyFromPEM([]byte(in.Key))
-		case "RS384":
-			method = jwt.SigningMethodRS384
-			key, err = jwt.ParseRSAPrivateKeyFromPEM([]byte(in.Key))
-		case "RS512":
-			method = jwt.SigningMethodRS512
-			key, err = jwt.ParseRSAPrivateKeyFromPEM([]byte(in.Key))
-		case "None":
-			method = jwt.SigningMethodNone
-		}
-
-		token, err := jwt.NewWithClaims(method, in.Claims).SignedString(key)
-		if err != nil {
-			if !h.settings.EnableErrorPort {
-				return err
-			}
-			return handler(ctx, ErrorPort, Error{
-				Context: in.Context,
-				Error:   err.Error(),
-			})
-		}
-
-		return handler(ctx, ResponsePort, Response{
-			Token:   token,
-			Context: in.Context,
-		})
-	default:
-		return fmt.Errorf("port %s is not supoprted", port)
+	in, ok := msg.(Settings)
+	if !ok {
+		return fmt.Errorf("invalid settings")
 	}
+	h.settings = in
 	return nil
+}
+
+// Handle dispatches the RequestPort. System ports go through capabilities.
+func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg any) any {
+	if port != RequestPort {
+		return fmt.Errorf("unknown port: %s", port)
+	}
+
+
+	in, ok := msg.(Request)
+	if !ok {
+		return fmt.Errorf("invalid input")
+	}
+
+	var (
+		key    interface{}
+		method jwt.SigningMethod = jwt.SigningMethodHS256
+		err    error
+	)
+
+	switch in.SigningMethod.Value {
+	case "ES256":
+		method = jwt.SigningMethodES256
+		key, err = jwt.ParseECPrivateKeyFromPEM([]byte(in.Key))
+	case "ES384":
+		method = jwt.SigningMethodES384
+		key, err = jwt.ParseECPrivateKeyFromPEM([]byte(in.Key))
+	case "ES512":
+		method = jwt.SigningMethodES512
+		key, err = jwt.ParseECPrivateKeyFromPEM([]byte(in.Key))
+	case "HS256":
+		method = jwt.SigningMethodHS256
+		key = []byte(in.Key)
+	case "HS384":
+		method = jwt.SigningMethodHS384
+		key = []byte(in.Key)
+	case "HS512":
+		method = jwt.SigningMethodHS512
+		key = []byte(in.Key)
+	case "RS256":
+		method = jwt.SigningMethodRS256
+		key, err = jwt.ParseRSAPrivateKeyFromPEM([]byte(in.Key))
+	case "RS384":
+		method = jwt.SigningMethodRS384
+		key, err = jwt.ParseRSAPrivateKeyFromPEM([]byte(in.Key))
+	case "RS512":
+		method = jwt.SigningMethodRS512
+		key, err = jwt.ParseRSAPrivateKeyFromPEM([]byte(in.Key))
+	case "None":
+		method = jwt.SigningMethodNone
+	}
+
+	token, err := jwt.NewWithClaims(method, in.Claims).SignedString(key)
+	if err != nil {
+		if !h.settings.EnableErrorPort {
+			return err
+		}
+		return handler(ctx, ErrorPort, Error{
+			Context: in.Context,
+			Error:   err.Error(),
+		})
+	}
+
+	return handler(ctx, ResponsePort, Response{
+		Token:   token,
+		Context: in.Context,
+	})
 }
 
 func (h *Component) Ports() []module.Port {
@@ -207,7 +209,10 @@ func (h *Component) Instance() module.Component {
 	}
 }
 
-var _ module.Component = (*Component)(nil)
+var (
+	_ module.Component       = (*Component)(nil)
+	_ module.SettingsHandler = (*Component)(nil)
+)
 
 func init() {
 	registry.Register(&Component{})

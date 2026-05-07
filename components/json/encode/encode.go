@@ -51,46 +51,47 @@ func (h *Component) GetInfo() module.ComponentInfo {
 	}
 }
 
-func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg interface{}) any {
+// OnSettings stores the component settings.
+func (h *Component) OnSettings(_ context.Context, msg any) error {
 
-	switch port {
-	case v1alpha1.SettingsPort:
 
-		in, ok := msg.(Settings)
-		if !ok {
-			return fmt.Errorf("invalid settings")
-		}
-		h.settings = in
-
-	case RequestPort:
-
-		in, ok := msg.(Request)
-		if !ok {
-			return fmt.Errorf("invalid input")
-		}
-
-		data, err := json.Marshal(in.Document)
-		if err != nil {
-			if !h.settings.EnableErrorPort {
-				return err
-			}
-			return handler(ctx, ErrorPort, Error{
-				Context: in.Context,
-				Error:   err.Error(),
-			})
-		}
-
-		buf := bytes.NewBuffer(data)
-
-		return handler(ctx, ResponsePort, Response{
-			Encoded: buf.String(),
-			Context: in.Context,
-		})
-
-	default:
-		return fmt.Errorf("port %s is not supoprted", port)
+	in, ok := msg.(Settings)
+	if !ok {
+		return fmt.Errorf("invalid settings")
 	}
+	h.settings = in
 	return nil
+}
+
+// Handle dispatches the RequestPort. System ports go through capabilities.
+func (h *Component) Handle(ctx context.Context, handler module.Handler, port string, msg any) any {
+	if port != RequestPort {
+		return fmt.Errorf("unknown port: %s", port)
+	}
+
+
+	in, ok := msg.(Request)
+	if !ok {
+		return fmt.Errorf("invalid input")
+	}
+
+	data, err := json.Marshal(in.Document)
+	if err != nil {
+		if !h.settings.EnableErrorPort {
+			return err
+		}
+		return handler(ctx, ErrorPort, Error{
+			Context: in.Context,
+			Error:   err.Error(),
+		})
+	}
+
+	buf := bytes.NewBuffer(data)
+
+	return handler(ctx, ResponsePort, Response{
+		Encoded: buf.String(),
+		Context: in.Context,
+	})
 }
 
 func (h *Component) Ports() []module.Port {
@@ -132,7 +133,10 @@ func (h *Component) Instance() module.Component {
 	}
 }
 
-var _ module.Component = (*Component)(nil)
+var (
+	_ module.Component       = (*Component)(nil)
+	_ module.SettingsHandler = (*Component)(nil)
+)
 
 func init() {
 	registry.Register(&Component{})
