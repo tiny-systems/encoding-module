@@ -22,7 +22,8 @@ type Context any
 type Decoded any
 
 type Settings struct {
-	EnableErrorPort bool `json:"enableErrorPort" required:"true" title:"Enable Error Port" description:"If error happen, error port will emit an error message"`
+	EnableErrorPort bool    `json:"enableErrorPort" required:"true" title:"Enable Error Port" description:"If error happen, error port will emit an error message"`
+	Decoded         Decoded `json:"decoded" configurable:"true" title:"Decoded shape" description:"Schema and example of the decoded JSON. Downstream edges from this node will be validated against this shape."`
 }
 
 type Error struct {
@@ -105,11 +106,13 @@ func (h *Component) Ports() []module.Port {
 			Configuration: Request{},
 		},
 		{
-			Name:          ResponsePort,
-			Position:      module.Right,
-			Label:         "Out",
-			Source:        true,
-			Configuration: Output{},
+			Name:     ResponsePort,
+			Position: module.Right,
+			Label:    "Out",
+			Source:   true,
+			Configuration: Output{
+				Decoded: h.settings.Decoded,
+			},
 		},
 		{
 			Name:          v1alpha1.SettingsPort,
