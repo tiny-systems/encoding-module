@@ -49,8 +49,11 @@ func (h *Component) GetInfo() module.ComponentInfo {
 	return module.ComponentInfo{
 		Name:        ComponentName,
 		Description: "JSON Decoder",
-		Info:        "Decodes input string with JSON",
-		Tags:        []string{"json"},
+		Info: "Parses a JSON string into data the rest of the flow can read. " +
+			"SET THE `decoded` SETTING to an example of the JSON you expect — a string has no shape, so without one every downstream edge is unverifiable: an expression like {{$.decoded.user.id}} is accepted when the flow is built and resolves to null at runtime. With an example, the same mistake is caught immediately. Only the shape matters, not the values; one representative object is enough, and for a list one representative element. " +
+			"When the payload carries a list of items, wire array_split after this so each item arrives as its own message instead of every downstream node looping. " +
+			"Some senders report that they truncated a batch, in a field alongside it. Include that field in the example and check it, or a batch that silently dropped items reads as the complete set.",
+		Tags: []string{"json"},
 	}
 }
 
