@@ -10,6 +10,7 @@ Data encoding, decoding, and templating components.
 | JSON Decode | Parse JSON string into structured data |
 | XML Encode | Serialize data to XML |
 | JWT Encoder | Create signed JSON Web Tokens |
+| JWT Decoder | Verify and decode JSON Web Tokens |
 | Go Template Engine | Render output using Go `text/template` syntax |
 
 ## Installation
