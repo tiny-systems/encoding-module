@@ -4,7 +4,7 @@ go 1.25.12
 
 require (
 	github.com/goccy/go-json v0.10.6
-	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
